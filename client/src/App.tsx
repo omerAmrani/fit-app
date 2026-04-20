@@ -1,72 +1,29 @@
 import { useState } from 'react';
-import { useTimer } from './hooks/useTimer';
-import { SessionPanel } from './components/SessionPanel';
-import { TimerTypeToggle } from './components/TimerTypeToggle';
-import { DurationInput } from './components/DurationInput';
-import { CountdownDisplay } from './components/CountdownDisplay';
-import { ControlButtons } from './components/ControlButtons';
-import { StatusBar } from './components/StatusBar';
+import { useChat } from './hooks/useChat';
+import { LoginPage } from './components/LoginPage';
+import { ChatPage } from './components/ChatPage';
+
+const SERVER_URL = 'http://localhost:3001';
 
 export function App() {
-  const {
-    connected,
-    joined,
-    sessionId,
-    timerState,
-    phaseMessage,
-    joinSession,
-    startTimer,
-    pauseTimer,
-    resetTimer,
-    setSessionId,
-  } = useTimer();
+  const [myName, setMyName] = useState<string | null>(null);
+  const { users, messages, join, sendMessage } = useChat(SERVER_URL);
 
-  const [selectedType, setSelectedType] = useState<'EMOM' | 'AMRAP'>('EMOM');
-  const [duration, setDuration] = useState(60);
-
-  const handleJoin = () => {
-    if (sessionId.trim()) {
-      joinSession(sessionId);
-    }
+  const handleLogin = (name: string) => {
+    join(name);
+    setMyName(name);
   };
 
-  const handleStart = () => {
-    startTimer(selectedType, duration);
-  };
+  if (!myName) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
 
   return (
-    <>
-      <h1>Live Workout Timer</h1>
-      <SessionPanel
-        sessionId={sessionId}
-        onSessionIdChange={setSessionId}
-        onJoin={handleJoin}
-      />
-      <TimerTypeToggle
-        selectedType={selectedType}
-        onChange={setSelectedType}
-      />
-      <DurationInput
-        value={duration}
-        onChange={setDuration}
-      />
-      <CountdownDisplay
-        remaining={timerState.remaining}
-        type={timerState.type}
-        phaseMessage={phaseMessage}
-      />
-      <ControlButtons
-        joined={joined}
-        running={timerState.running}
-        onStart={handleStart}
-        onPause={pauseTimer}
-        onReset={resetTimer}
-      />
-      <StatusBar
-        connected={connected}
-        joined={joined}
-        sessionId={sessionId}
-      />
-    </>
+    <ChatPage
+      myName={myName}
+      users={users}
+      messages={messages}
+      onSend={sendMessage}
+    />
   );
 }
